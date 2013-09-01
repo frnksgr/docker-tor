@@ -1,25 +1,29 @@
 #!/bin/bash
 
-PIDFILE=~/.docker-tor.pid
+#set -x
+
+PIDFILE="$HOME/.docker-tor.pid"
 PROXYPORT=58118
 SOCKSPORT=59050
 
 
 running() {
   test -e $PIDFILE &&
-  test docker ps | grep $(cat $PIDFILE)
+  docker ps | grep "$(cat $PIDFILE)" >/dev/null
 }
 
 start() {
   if ! running; then
-    pid=$(docker -d -p $PROXYPORT:8118 $SOCKSPORT:9050 frnksgr/tor)
+    pid=$(docker run -d -p $PROXYPORT:8118 -p $SOCKSPORT:9050 frnksgr/tor)
     echo $pid > $PIDFILE
   fi
 }
 
 stop() {
   if running; then
-    docker stop $(cat $PIDFILE)
+    pid=$(cat $PIDFILE)
+    docker kill $pid >/dev/null
+    docker rm $pid >/dev/null
     rm $PIDFILE
   fi
 }
