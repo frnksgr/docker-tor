@@ -1,0 +1,43 @@
+#!/bin/bash
+
+PIDFILE=~/.docker-tor.pid
+PROXYPORT=58118
+SOCKSPORT=59050
+
+
+running() {
+  test -e $PIDFILE &&
+  test docker ps | grep $(cat $PIDFILE)
+}
+
+start() {
+  if ! running; then
+    pid=$(docker -d -p $PROXYPORT:8118 $SOCKSPORT:9050 frnksgr/tor)
+    echo $pid > $PIDFILE
+  fi
+}
+
+stop() {
+  if running; then
+    docker stop $(cat $PIDFILE)
+    rm $PIDFILE
+  fi
+}
+
+help() {
+  echo "Usage: $(basename $0) [start|stop]"
+  echo "  start stop TOR server"
+  echo "  proxy localhost:$PROXYPORT, socks-5 localhost:$SOCKSPORT"
+}
+
+case "$1" in
+  "start")
+    start
+    ;;
+  "stop")
+    stop
+    ;;
+  *)
+    help
+    ;;
+esac
